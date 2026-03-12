@@ -30,41 +30,37 @@ if not exist "resources\data" mkdir "resources\data"
 echo [1/4] Checking database...
 if not exist "resources\data\content.db" (
     echo       First run - creating database tables...
-    resources\node.exe resources\node_modules\.prisma\client\index.js 2>nul
+    resources\node.exe resources\node_modules\.prisma\client\index.js 2>/dev/null
     echo       Database ready.
 ) else (
     echo       Database exists.
 )
 
 :: Start Antidetect Engine
-echo [2/4] Starting Antidetect Engine on port %ENGINE_PORT%...
+echo [2/4] Starting engine on port %ENGINE_PORT%...
 start /b "Engine" resources\node.exe resources\engine-bundle.js > resources\data\engine.log 2>&1
-timeout /t 3 /nobreak > nul
+timeout /t 3 /nobreak > /dev/null
 
 :: Start Content Distribution
-echo [3/4] Starting Content Distribution on port %CONTENT_PORT%...
+echo [3/4] Starting services on port %CONTENT_PORT%...
 start /b "Content" resources\node.exe resources\content-bundle.mjs > resources\data\content.log 2>&1
-timeout /t 5 /nobreak > nul
+timeout /t 5 /nobreak > /dev/null
 
-:: Verify services
-echo [4/4] Verifying services...
-timeout /t 5 /nobreak > nul
+:: Open dashboard in browser
+echo [4/4] Opening dashboard...
+timeout /t 3 /nobreak > /dev/null
+start "" "http://localhost:%CONTENT_PORT%"
 
 echo.
 echo ============================================
-echo   RapidAutomate Node is RUNNING
-echo   Engine:  http://localhost:%ENGINE_PORT%
-echo   Content: http://localhost:%CONTENT_PORT%
-echo   Dashboard: https://www.rapidrankings.io
+echo   Node is RUNNING
+echo   Dashboard: http://localhost:%CONTENT_PORT%
+echo   Engine:    http://localhost:%ENGINE_PORT%
 echo.
 echo   Press Ctrl+C or close this window to stop
 echo ============================================
 echo.
 
-:: Keep window open and tail the content log
-echo Watching content log (Ctrl+C to stop)...
-echo ---
-type resources\data\content.log 2>nul
 :loop
-timeout /t 10 /nobreak > nul
+timeout /t 10 /nobreak > /dev/null
 goto loop
