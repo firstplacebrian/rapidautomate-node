@@ -1,98 +1,90 @@
 # RapidAutomate Desktop Node
 
-A portable deployment package that turns any Windows desktop into a RapidAutomate automation node.
+A portable desktop node — workspace automation tool and game center for Windows.
 
-## What It Does
+## What It Includes
 
-- Runs CTR campaigns (Google Search, Maps, YouTube)
-- Simulates GPS drives to boost Maps rankings
-- Warms up Gmail/Google accounts
-- Launches antidetect browser profiles
-- Syndicates content across platforms
-- Automates social media (11 platforms)
-- Syncs all data to the cloud dashboard every 5 minutes
+- Local automation services (engine + API)
+- Full dashboard UI accessible from any browser on your network
+- **Chess game** — play against the ChessForge bot (Positional Seat Theory AI)
+- Account management, browser profiles, content tools
+- No cloud required — runs entirely on your machine
 
 ## Quick Start
 
 1. Unzip to any folder
-2. Edit `config.env` with your credentials
-3. Double-click `start-node.bat`
-4. View results at https://www.rapidrankings.io
+2. Double-click `start-node.bat`
+3. Browser opens automatically at `http://localhost:3001`
+4. Click **Chess** in the sidebar to play
 
-## Setup
+---
 
-### Requirements
-- Windows 10/11
-- No installation needed — everything is included
+## How to Play Chess Against the Bot
 
-### Configuration
+### Overview
+You play **White**. The bot plays **Black** using **Positional Seat Theory** — a chess AI that evaluates board positions based on 20-dimensional vectors and recommends moves from a learned pattern library.
 
-Edit `config.env` before first run:
+### Playing the Game
+
+1. **Click any of your pieces** (white) to select it — legal moves highlight with dots
+2. **Click a highlighted square** to move there
+3. The bot responds automatically after your move (~0.5s)
+4. **Pawn promotion**: reaching the 8th rank opens a piece selector (Queen, Rook, Bishop, Knight)
+5. **Flip Board**: swap perspective (useful when coaching yourself on Black's position)
+6. **New Game**: resets the board at any time
+
+### Understanding the Bot's Analysis Panel
+
+After each bot move, the right panel updates with:
+
+| Field | What it means |
+|-------|---------------|
+| **GTO Move** | The bot's chosen move from its pattern library |
+| **Confidence** | How many similar positions it found in its library |
+| **Expected outcome** | Average win % for this type of position (0–100) |
+| **Clock phase** | Opening / Middlegame / Endgame — changes strategy |
+| **White / Black authority** | Seat control score — who "owns" the board |
+
+### Seat Theory (How the Bot Thinks)
+
+The bot treats the board as a map of **seats** — key squares with strategic authority. High-authority seats (e4, d4, c3, f3, etc.) control more of the board. The bot aims to:
+
+- **Occupy high-authority seats** with its pieces
+- **Contest your control** when you hold the advantage
+- **Exploit clock phase** — opening = development, middlegame = initiative, endgame = conversion
+
+The **authority bar** shows who controls more of the board right now. If it's heavily black-side, the bot has positional pressure. If it's white-side, you're ahead — don't give it back.
+
+### Tips for Beating the Bot
+
+- The bot is strong in **middlegame positional play** — it will try to dominate the center
+- It's weakest in **sharp tactical lines** — sacrifices and unexpected piece activity can throw it off
+- When the bot has low confidence (few patterns), it falls back to random moves — push complications
+- Watch the **seat advice text** — it tells you exactly what the bot is trying to do next
+
+### Seeding the Bot's Library (Make It Stronger)
+
+The bot learns from PGN games. To import grandmaster games:
 
 ```
-CENTRAL_API_EMAIL=your@email.com
-CENTRAL_API_PASSWORD=yourpassword
-HEADLESS=true          (false to see Chrome windows)
-ENGINE_PORT=3500       (change if port conflict)
-CONTENT_PORT=3001      (change if port conflict)
+POST http://localhost:3500/api/chess/import-pgn
+{ "pgn": "<paste PGN text here>", "maxGames": 100 }
 ```
 
-### First Run
+The more games imported, the stronger and more principled the bot's play becomes.
 
-The node will:
-1. Create local SQLite databases
-2. Auto-login to the cloud API
-3. Register as a new instance (gets unique ID)
-4. Start heartbeat (every 5 min)
-5. Start cloud sync (every 5 min)
+---
 
-## File Structure
+## Network Access
 
-```
-rapidautomate-node/
-├── start-node.bat          ← Double-click to start
-├── stop-node.bat           ← Double-click to stop
-├── config.env              ← Edit your settings here
-├── README.md               ← You are here
-└── resources/
-    ├── node.exe            ← Node.js runtime (included)
-    ├── engine-bundle.js    ← Antidetect engine
-    ├── content-bundle.mjs  ← Content distribution service
-    ├── node_modules/       ← Native dependencies
-    ├── prisma/             ← Database schema
-    └── data/               ← Local databases + logs (created on first run)
-```
+To access from another computer on the same WiFi:
 
-## Multi-Node
+1. On this machine, open cmd: `ipconfig | findstr "IPv4"`
+2. Note the IP (e.g. `192.168.1.105`)
+3. On the other computer: open `http://192.168.1.105:3001`
 
-You can run multiple nodes on different machines. Each node:
-- Gets its own instance ID (ISN)
-- Runs campaigns from its own IP/location
-- Syncs independently to the same dashboard
-- Shows up as a separate instance in the admin panel
+---
 
-## Ports
+## Stopping the Node
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Engine | 3500 | Antidetect browser engine |
-| Content | 3001 | Content distribution, CTR, warmup |
-
-## Logs
-
-Logs are in `resources/data/`:
-- `engine.log` — Browser engine activity
-- `content.log` — Content service, sync, campaigns
-
-## Stopping
-
-Either:
-- Double-click `stop-node.bat`
-- Close the start-node window
-- Run `taskkill /F /IM node.exe` in any terminal
-
-## Dashboard
-
-All data syncs to https://www.rapidrankings.io
-
-Login with the same credentials from your `config.env`.
+Close the terminal window, or double-click `stop-node.bat`.
